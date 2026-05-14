@@ -177,7 +177,25 @@ input[type="number"] { -moz-appearance: textfield; }
 .lightbox img { max-width: 100%; max-height: 90vh; border-radius: 8px; }
 .lightbox-close { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
 .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; vertical-align: middle; }
-@keyframes spin { to { transform: rotate(360deg); } }
+/* CATALOGUE */
+  .cat-size-block { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; overflow: hidden; }
+  .cat-size-header { padding: 14px 16px; background: var(--surface2); font-size: 15px; font-weight: 800; color: var(--text); border-bottom: 1px solid var(--border); }
+  .cat-shape-row { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); gap: 12px; flex-wrap: wrap; }
+  .cat-shape-row:last-child { border-bottom: none; }
+  .cat-shape-thumb { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border); }
+  .cat-shape-name { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; min-width: 80px; }
+  .cat-toggle-group { display: flex; gap: 6px; flex-shrink: 0; }
+  .cat-toggle { padding: 6px 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface2); color: var(--text3); font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.15s; }
+  .cat-toggle.on { border-color: var(--accent); background: rgba(224,90,0,0.1); color: var(--accent); }
+  .cat-enabled { display: flex; align-items: center; gap: 6px; }
+  .cat-enabled-label { font-size: 11px; color: var(--text3); font-weight: 700; min-width: 24px; }
+  .switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; background: var(--border); border-radius: 22px; cursor: pointer; transition: 0.2s; }
+  .slider:before { content: ""; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.2s; }
+  input:checked + .slider { background: var(--accent); }
+  input:checked + .slider:before { transform: translateX(18px); }
+  @keyframes spin { to { transform: rotate(360deg); } }
 .empty-state { text-align: center; padding: 48px 20px; color: var(--text3); }
 .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
 .divider { height: 1px; background: var(--border); margin: 16px 0; }
@@ -212,6 +230,7 @@ input[type="number"] { -moz-appearance: textfield; }
       <button class="nav-tab active" onclick="showPage('entry',this)">Entry</button>
       <button class="nav-tab" onclick="showPage('log',this)">Log</button>
       <button class="nav-tab" onclick="showPage('manager',this)">Manager</button>
+      <button class="nav-tab" id="catalogueTab" style="display:none" onclick="showPage('catalogue',this)">Catalogue</button>
     </div>
   </div>
 
@@ -263,6 +282,16 @@ input[type="number"] { -moz-appearance: textfield; }
   </div>
 </div>
 
+  <!-- CATALOGUE PAGE -->
+  <div id="page-catalogue" class="page">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="section-title" style="margin:0;">Frame Catalogue</div>
+      <button class="btn-secondary" onclick="saveCatalogue()" id="saveCatalogueBtn" style="font-size:12px;padding:8px 14px;">Save Changes</button>
+    </div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:20px;">Changes here sync to StockLens automatically.</div>
+    <div id="catalogueEditor"></div>
+  </div>
+
 <!-- EDIT MODAL -->
 <div class="modal-overlay" id="editModal">
   <div class="modal">
@@ -307,7 +336,9 @@ const SHAPE_IMAGES = {
 // ── CONFIG ───────────────────────────────────────
 const CLIENT_ID   = '801481705797-g3fpo65r67n8437eti5lknpa6gqcvf3e.apps.googleusercontent.com';
 const FOLDER_ID   = '1qjkky9SFF6Wi726RUiLLn1tHh94o50bI';
-const DB_FILE     = 'coatinglens_db.json';
+const DB_FILE          = 'coatinglens_db.json';
+const STOCKLENS_FOLDER = '1hqiHgj4uhYxGYL3g2CaCsX1ICxeHWyEN';
+const CATALOGUE_FILE   = 'stocklens_frames.json';
 const OWNER_EMAIL = 'adityaramnani91581@gmail.com';
 const SCOPES      = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.email';
 
@@ -340,6 +371,8 @@ let editingId     = null;
 let logFilter     = 'all';
 let managerFilter = 'all';
 let photosFolderId = null;
+let isOwner = false;
+let catalogue = null;
 
 // per-trolley draft state (indexed by trolley index)
 let drafts = {};  // drafts[idx] = { size, shape, mattress, panelOpen }
@@ -363,6 +396,9 @@ function signIn() {
         document.getElementById('app').style.display = 'block';
         startClock();
         await loadSessions();
+        var ownerEmail = await fetchUserProfile();
+        await checkOwner(ownerEmail);
+        await loadCatalogue();
       }
     }
   });
@@ -415,6 +451,7 @@ function showPage(name, el) {
   el.classList.add('active');
   if (name === 'log') renderLog();
   if (name === 'manager') renderManager();
+  if (name === 'catalogue') renderCatalogueEditor();
 }
 
 // ── TROLLEY MANAGEMENT ────────────────────────────
@@ -472,7 +509,8 @@ function trolleyCardHTML(t, idx) {
 
   // shape grid for current size
   const shapeGridHTML = d.size ? (() => {
-    const available = SHAPES.filter(s => s.sizes.includes(d.size));
+    const sourceShapes = (window.SHAPES_ACTIVE || SHAPES);
+    const available = sourceShapes.filter(s => s.sizes.includes(d.size));
     return available.map(s => `
       <div class="shape-card ${d.shape === s.label ? 'selected' : ''}" onclick="selectShape(${idx},'${s.id}','${s.label}')">
         <img src="${SHAPE_IMAGES[s.id]}" alt="${s.label}" loading="lazy">
@@ -592,6 +630,7 @@ function toggleOptional(idx) {
 // ── PICKER ────────────────────────────────────────
 function selectSize(idx, size) {
   drafts[idx] = { size, shape: null, mattress: null };
+  // refresh shape list from catalogue if loaded
   renderTrolleys();
   // reopen panel
   setTimeout(() => {
@@ -602,7 +641,7 @@ function selectSize(idx, size) {
 
 function selectShape(idx, id, label) {
   // determine mattress options
-  const shapeDef = SHAPES.find(s => s.id === id);
+  const shapeDef = (window.SHAPES_ACTIVE || SHAPES).find(s => s.id === id);
   const mattress = shapeDef ? (shapeDef.mattress || 'both') : 'both';
   drafts[idx].shape = label;
   drafts[idx].mattress = null;
@@ -981,6 +1020,130 @@ function showToast(msg, type) {
   t.textContent = msg; t.className = 'toast show ' + (type||'');
   setTimeout(() => t.classList.remove('show'), 2800);
 }
+
+// ── CATALOGUE ─────────────────────────────────────
+
+function buildDefaultCatalogue() {
+  var DQK = ['Double 4ft','Queen 5ft','King 6ft'];
+  return { shapes: [
+    { id:'round',            label:'Round',            sizes:['Single 2.5ft','Single 3ft'], mattress:'both' },
+    { id:'square',           label:'Square',           sizes:['Single 2.5ft','Single 3ft'], mattress:'both' },
+    { id:'metal',            label:'Metal',            sizes:['Single 2.5ft','Single 3ft'], mattress:'without' },
+    { id:'headboard',        label:'Headboard',        sizes:['Single 3ft','Double 4ft','Queen 5ft','King 6ft'], mattress:'both' },
+    { id:'element',          label:'Element',          sizes:['Single 3ft','Double 4ft','Queen 5ft','King 6ft'], mattress:'both' },
+    { id:'trolley',          label:'Trolley',          sizes:['Single 3ft'], mattress:'both' },
+    { id:'golden',           label:'Golden',           sizes:DQK, mattress:'both' },
+    { id:'lg',               label:'LG',               sizes:DQK, mattress:'both' },
+    { id:'nesto',            label:'Nesto',            sizes:DQK, mattress:'both' },
+    { id:'oslo',             label:'Oslo',             sizes:DQK, mattress:'both' },
+    { id:'wooden_half_patti',label:'Wooden Half Patti',sizes:DQK, mattress:'both' },
+    { id:'wooden_full_patti',label:'Wooden Full Patti',sizes:DQK, mattress:'both' },
+    { id:'base',             label:'Base',             sizes:['Single 2.5ft','Single 3ft','Double 4ft','Queen 5ft','King 6ft'], mattress:'both' },
+  ]};
+}
+
+async function loadCatalogue() {
+  try {
+    var q = encodeURIComponent("name='" + CATALOGUE_FILE + "' and '" + STOCKLENS_FOLDER + "' in parents and trashed=false");
+    var res = await fetch('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id)',
+      { headers: { Authorization: 'Bearer ' + accessToken } });
+    var data = await res.json();
+    if (data.files && data.files.length > 0) {
+      var content = await fetch('https://www.googleapis.com/drive/v3/files/' + data.files[0].id + '?alt=media',
+        { headers: { Authorization: 'Bearer ' + accessToken } });
+      catalogue = await content.json();
+    } else {
+      catalogue = buildDefaultCatalogue();
+    }
+  } catch(e) { catalogue = buildDefaultCatalogue(); }
+  window.SHAPES_ACTIVE = catalogue.shapes;
+}
+
+async function saveCatalogue() {
+  var btn = document.getElementById('saveCatalogueBtn');
+  btn.textContent = 'Saving...'; btn.disabled = true;
+  try {
+    var blob = new Blob([JSON.stringify(catalogue, null, 2)], { type: 'application/json' });
+    // Always save to StockLens folder
+    var q = encodeURIComponent("name='" + CATALOGUE_FILE + "' and '" + STOCKLENS_FOLDER + "' in parents and trashed=false");
+    var res = await fetch('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id)',
+      { headers: { Authorization: 'Bearer ' + accessToken } });
+    var data = await res.json();
+    if (data.files && data.files.length > 0) {
+      await fetch('https://www.googleapis.com/upload/drive/v3/files/' + data.files[0].id + '?uploadType=media',
+        { method: 'PATCH', headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' }, body: blob });
+    } else {
+      var meta = { name: CATALOGUE_FILE, parents: [STOCKLENS_FOLDER] };
+      var form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
+      form.append('file', blob);
+      await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+        { method: 'POST', headers: { Authorization: 'Bearer ' + accessToken }, body: form });
+    }
+    window.SHAPES_ACTIVE = catalogue.shapes;
+    showToast('Catalogue saved ✓ — synced to StockLens', 'success');
+  } catch(e) { showToast('Error saving catalogue', 'error'); }
+  btn.textContent = 'Save Changes'; btn.disabled = false;
+}
+
+function renderCatalogueEditor() {
+  if (!catalogue) return;
+  var ALL_SIZES = ['Single 2.5ft','Single 3ft','Double 4ft','Queen 5ft','King 6ft'];
+  var out = '';
+  ALL_SIZES.forEach(function(size) {
+    out += '<div class="cat-size-block"><div class="cat-size-header">' + size + '</div>';
+    catalogue.shapes.forEach(function(shape) {
+      var enabled = shape.sizes.includes(size);
+      var mattress = shape.mattress || 'both';
+      var sid = shape.id; var ssz = size;
+      out += '<div class="cat-shape-row">';
+      out += '<img class="cat-shape-thumb" src="' + (SHAPE_IMAGES[shape.id] || '') + '" alt="' + shape.label + '">';
+      out += '<div class="cat-shape-name">' + shape.label + '</div>';
+      out += '<div class="cat-enabled"><span class="cat-enabled-label">' + (enabled ? 'ON' : 'OFF') + '</span>';
+      out += '<label class="switch"><input type="checkbox" ' + (enabled ? 'checked' : '') + ' data-shape="' + sid + '" data-size="' + ssz + '" onchange="toggleShapeSize(this)"><span class="slider"></span></label></div>';
+      if (enabled) {
+        out += '<div class="cat-toggle-group">';
+        out += '<button class="cat-toggle ' + (mattress === 'with' || mattress === 'both' ? 'on' : '') + '" data-shape="' + sid + '" data-type="with" onclick="toggleMattress(this)">W/ Matt</button>';
+        out += '<button class="cat-toggle ' + (mattress === 'without' || mattress === 'both' ? 'on' : '') + '" data-shape="' + sid + '" data-type="without" onclick="toggleMattress(this)">W/O Matt</button>';
+        out += '</div>';
+      }
+      out += '</div>';
+    });
+    out += '</div>';
+  });
+  document.getElementById('catalogueEditor').innerHTML = out;
+}
+
+function toggleShapeSize(el) {
+  var shapeId = el.getAttribute('data-shape');
+  var size    = el.getAttribute('data-size');
+  var enabled = el.checked;
+  var shape = catalogue.shapes.find(function(s){ return s.id === shapeId; });
+  if (!shape) return;
+  if (enabled) { if (!shape.sizes.includes(size)) shape.sizes.push(size); }
+  else { shape.sizes = shape.sizes.filter(function(s){ return s !== size; }); }
+  renderCatalogueEditor();
+}
+
+function toggleMattress(el) {
+  var shapeId = el.getAttribute('data-shape');
+  var type    = el.getAttribute('data-type');
+  var shape = catalogue.shapes.find(function(s){ return s.id === shapeId; });
+  if (!shape) return;
+  var cur = shape.mattress || 'both';
+  if (type === 'with') {
+    shape.mattress = (cur === 'both') ? 'without' : (cur === 'without' ? 'both' : 'without');
+  } else {
+    shape.mattress = (cur === 'both') ? 'with' : (cur === 'with' ? 'both' : 'with');
+  }
+  renderCatalogueEditor();
+}
+
+async function checkOwner(userEmail) {
+  isOwner = (userEmail === OWNER_EMAIL);
+  if (isOwner) document.getElementById('catalogueTab').style.display = 'block';
+}
+
 
 // init
 renderTrolleys();
