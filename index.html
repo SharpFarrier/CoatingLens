@@ -238,16 +238,91 @@ input[type="number"] { -moz-appearance: textfield; }
   <div id="page-entry" class="page active">
     <div class="datetime-display" id="datetimeDisplay">--</div>
 
-    <div class="section-title">Trolleys in this Session</div>
-    <div id="trolleyList"></div>
-    <button class="btn-add-trolley" onclick="addTrolley()">+ Add Trolley</button>
+    <div class="section-title">Trolley Details</div>
+    <div class="field-group">
+      <div class="field-label">Trolley ID / Label</div>
+      <input type="text" id="trolleyLabel" placeholder="e.g. T-1, Morning Batch">
+    </div>
+
+    <div class="section-title">Coating Colour</div>
+    <div class="pill-row" id="colourRow">
+      <div class="pill colour-pill" onclick="selectColour(this,'Black')">⬛ Black</div>
+      <div class="pill colour-pill" onclick="selectColour(this,'White')">⬜ White</div>
+      <div class="pill colour-pill" onclick="selectColour(this,'Golden')">🟨 Golden</div>
+      <div class="pill colour-pill" onclick="selectColour(this,'Ivory')">🟫 Ivory</div>
+    </div>
+
+    <div class="section-title">Frames in this Trolley</div>
+    <div id="lineItemsList"></div>
+
+    <div class="add-frame-panel collapsed" id="addFramePanel">
+      <div class="panel-header" onclick="togglePanel()">
+        <div class="panel-header-title">+ Add Frame</div>
+        <div class="panel-toggle">▼</div>
+      </div>
+      <div class="panel-body" id="panelBody">
+        <div class="picker-label">Size</div>
+        <div class="pill-row" id="sizeRow">
+          <div class="pill" onclick="selectSize(this,'Single 2.5ft')">Single 2.5ft</div>
+          <div class="pill" onclick="selectSize(this,'Single 3ft')">Single 3ft</div>
+          <div class="pill" onclick="selectSize(this,'Double 4ft')">Double 4ft</div>
+          <div class="pill" onclick="selectSize(this,'Queen 5ft')">Queen 5ft</div>
+          <div class="pill" onclick="selectSize(this,'King 6ft')">King 6ft</div>
+        </div>
+        <div id="shapeStep" style="display:none">
+          <div class="picker-label">Shape</div>
+          <div class="shape-grid" id="shapeGrid"></div>
+        </div>
+        <div id="mattressStep" style="display:none">
+          <div class="picker-label">Mattress</div>
+          <div class="toggle-row" id="mattressRow">
+            <div class="toggle-btn" onclick="selectMattress(this,'With Mattress')">With Mattress</div>
+            <div class="toggle-btn" onclick="selectMattress(this,'Without Mattress')">Without Mattress</div>
+          </div>
+        </div>
+        <div id="piecesStep" style="display:none">
+          <div class="picker-label">Pieces</div>
+          <div class="pieces-row">
+            <input type="number" id="piecesInput" placeholder="Number of pieces" min="1" inputmode="numeric" pattern="[0-9]*">
+            <button class="btn-secondary" onclick="addLineItem()">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Oven Details <span style="font-size:11px;font-weight:500;color:var(--text3);">(optional)</span></div>
+    <div class="optional-row">
+      <div>
+        <div class="field-label">Temperature</div>
+        <div class="unit-input">
+          <input type="number" id="tempInput" inputmode="decimal" placeholder="e.g. 200">
+          <div class="unit-label">°C</div>
+        </div>
+      </div>
+      <div>
+        <div class="field-label">Duration</div>
+        <div class="unit-input">
+          <input type="number" id="durationInput" inputmode="numeric" placeholder="e.g. 20">
+          <div class="unit-label">min</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Proof Photos <span style="font-size:11px;font-weight:500;color:var(--text3);">(optional)</span></div>
+    <div class="photo-area" onclick="document.getElementById('proofPhotoInput').click()">
+      <div class="icon">📸</div>
+      <div class="label">Tap to add photos</div>
+      <div class="hint">Multiple allowed</div>
+    </div>
+    <input type="file" id="proofPhotoInput" accept="image/*" multiple style="display:none" onchange="handleProofPhotos(event)">
+    <div class="photo-preview-row" id="proofPhotoPreview"></div>
 
     <div class="section-title">Notes</div>
     <div class="field-group">
       <textarea id="notesInput" rows="3" placeholder="Any additional remarks..."></textarea>
     </div>
 
-    <button class="btn-primary" id="submitBtn" onclick="submitSession()">Submit Session</button>
+    <button class="btn-primary" id="submitBtn" onclick="submitTrolley()">Submit Trolley</button>
   </div>
 
   <!-- LOG PAGE -->
@@ -264,14 +339,14 @@ input[type="number"] { -moz-appearance: textfield; }
   <!-- MANAGER PAGE -->
   <div id="page-manager" class="page">
     <div class="stats-row">
-      <div class="stat-card"><div class="stat-val" id="statSessions">0</div><div class="stat-label">Sessions</div></div>
-      <div class="stat-card"><div class="stat-val" id="statToday">0</div><div class="stat-label">Today</div></div>
       <div class="stat-card"><div class="stat-val" id="statTrolleys">0</div><div class="stat-label">Trolleys</div></div>
+      <div class="stat-card"><div class="stat-val" id="statToday">0</div><div class="stat-label">Today</div></div>
       <div class="stat-card"><div class="stat-val" id="statPieces">0</div><div class="stat-label">Pieces</div></div>
+      <div class="stat-card"><div class="stat-val" id="statToday">0</div><div class="stat-label">Today</div></div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:16px;">
       <button class="btn-secondary" style="flex:1" onclick="exportCSV()">Export CSV</button>
-      <button class="btn-secondary" style="flex:1" onclick="loadSessions()">Refresh</button>
+      <button class="btn-secondary" style="flex:1" onclick="loadTrolleys()">Refresh</button>
     </div>
     <div class="filter-bar">
       <div class="filter-chip active" onclick="filterManager('all',this)">All Time</div>
@@ -335,18 +410,17 @@ const SHAPE_IMAGES = {
 
 
 // ── CONFIG ───────────────────────────────────────
-const CLIENT_ID   = '801481705797-g3fpo65r67n8437eti5lknpa6gqcvf3e.apps.googleusercontent.com';
-const FOLDER_ID   = '1qjkky9SFF6Wi726RUiLLn1tHh94o50bI';
-const DB_FILE          = 'coatinglens_db.json';
+const CLIENT_ID        = '801481705797-g3fpo65r67n8437eti5lknpa6gqcvf3e.apps.googleusercontent.com';
+const FOLDER_ID        = '1qjkky9SFF6Wi726RUiLLn1tHh94o50bI';
 const STOCKLENS_FOLDER = '1hqiHgj4uhYxGYL3g2CaCsX1ICxeHWyEN';
+const DB_FILE          = 'coatinglens_db.json';
 const CATALOGUE_FILE   = 'stocklens_frames.json';
-const OWNER_EMAIL = 'adityaramnani91581@gmail.com';
-const SCOPES      = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.email';
+const OWNER_EMAIL      = 'adityaramnani91581@gmail.com';
+const SCOPES           = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.email';
 
 // ── FRAME CATALOGUE ──────────────────────────────
-const ALL_SIZES    = ['Single 2.5ft','Single 3ft','Double 4ft','Queen 5ft','King 6ft'];
-const SINGLE_SIZES = ['Single 2.5ft','Single 3ft'];
-const DQK          = ['Double 4ft','Queen 5ft','King 6ft'];
+const ALL_SIZES = ['Single 2.5ft','Single 3ft','Double 4ft','Queen 5ft','King 6ft'];
+const DQK       = ['Double 4ft','Queen 5ft','King 6ft'];
 const SHAPES = [
   { id:'round',            label:'Round',            sizes:['Single 2.5ft','Single 3ft'] },
   { id:'square',           label:'Square',           sizes:['Single 2.5ft','Single 3ft'] },
@@ -364,19 +438,22 @@ const SHAPES = [
 ];
 
 // ── STATE ────────────────────────────────────────
-let accessToken   = null;
-let dbFileId      = null;
-let sessions      = [];
-let trolleys      = [];       // draft trolleys for current session
-let editingId     = null;
-let logFilter     = 'all';
-let managerFilter = 'all';
-let photosFolderId = null;
-let isOwner = false;
-let catalogue = null;
-
-// per-trolley draft state (indexed by trolley index)
-let drafts = {};  // drafts[idx] = { size, shape, mattress, panelOpen }
+let accessToken     = null;
+let dbFileId        = null;
+let trolleyEntries  = [];
+let lineItems       = [];
+let draftSize       = null;
+let draftShape      = null;
+let draftMattress   = null;
+let draftShapeId    = null;
+let selectedColour  = null;
+let proofPhotosData = [];
+let editingId       = null;
+let logFilter       = 'all';
+let managerFilter   = 'all';
+let photosFolderId  = null;
+let isOwner         = false;
+let catalogue       = null;
 
 // ── AUTH ─────────────────────────────────────────
 function signIn() {
@@ -396,7 +473,7 @@ function signIn() {
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         startClock();
-        await loadSessions();
+        await loadTrolleys();
         var ownerEmail = await fetchUserProfile();
         await checkOwner(ownerEmail);
         await loadCatalogue();
@@ -421,8 +498,7 @@ async function fetchUserProfile() {
   try {
     const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',
       { headers: { Authorization: 'Bearer ' + accessToken } });
-    const data = await res.json();
-    return data.email || '';
+    return (await res.json()).email || '';
   } catch(e) { return ''; }
 }
 
@@ -455,249 +531,122 @@ function showPage(name, el) {
   if (name === 'catalogue') renderCatalogueEditor();
 }
 
-// ── TROLLEY MANAGEMENT ────────────────────────────
-function addTrolley() {
-  const idx = trolleys.length;
-  trolleys.push({ id: 'T' + Date.now(), label: '', lineItems: [], temp: '', duration: '', photoData: [] });
-  drafts[idx] = { size: null, shape: null, mattress: null };
-  renderTrolleys();
-  // scroll to new trolley
-  setTimeout(() => {
-    const cards = document.querySelectorAll('.trolley-card');
-    if (cards.length) cards[cards.length-1].scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 100);
+// ── COLOUR PICKER ─────────────────────────────────
+function selectColour(el, colour) {
+  selectedColour = colour;
+  document.querySelectorAll('.colour-pill').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
 }
 
-function removeTrolley(idx) {
-  trolleys.splice(idx, 1);
-  delete drafts[idx];
-  // re-index drafts
-  const newDrafts = {};
-  Object.keys(drafts).forEach(k => {
-    const n = parseInt(k);
-    if (n > idx) newDrafts[n-1] = drafts[k];
-    else if (n < idx) newDrafts[n] = drafts[k];
-  });
-  drafts = newDrafts;
-  renderTrolleys();
+// ── FRAME PICKER ─────────────────────────────────
+function togglePanel() {
+  document.getElementById('addFramePanel').classList.toggle('collapsed');
 }
 
-function renderTrolleys() {
-  const el = document.getElementById('trolleyList');
-  if (trolleys.length === 0) {
-    el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:4px 0 12px;">No trolleys added yet. Tap the button below to add one.</div>';
-    return;
-  }
-  el.innerHTML = trolleys.map((t, idx) => trolleyCardHTML(t, idx)).join('');
+function selectSize(el, size) {
+  draftSize = size; draftShape = null; draftMattress = null; draftShapeId = null;
+  document.querySelectorAll('#sizeRow .pill').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  renderShapeGrid(size);
+  document.getElementById('shapeStep').style.display = 'block';
+  document.getElementById('mattressStep').style.display = 'none';
+  document.getElementById('piecesStep').style.display = 'none';
 }
 
-function trolleyCardHTML(t, idx) {
-  const totalPieces = t.lineItems.reduce((s, l) => s + l.pieces, 0);
-  const d = drafts[idx] || {};
-
-  // line items list
-  const itemsHTML = t.lineItems.length > 0
-    ? t.lineItems.map((l, li) => `
-        <div class="line-item">
-          <div class="line-item-info">
-            <div class="line-item-name">${l.shape} \u2022 ${l.mattress}</div>
-            <div class="line-item-sub">${l.size}</div>
-          </div>
-          <div class="line-item-pieces">${l.pieces}</div>
-          <button class="line-item-remove" onclick="removeLineItem(${idx},${li})">×</button>
-        </div>`).join('')
-    : '<div style="font-size:13px;color:var(--text3);margin-bottom:8px;">No frames added yet.</div>';
-
-  // shape grid for current size
-  const shapeGridHTML = d.size ? (() => {
-    const sourceShapes = (window.SHAPES_ACTIVE || SHAPES);
-    const available = sourceShapes.filter(s => s.sizes.includes(d.size));
-    return available.map(s => `
-      <div class="shape-card ${d.shape === s.label ? 'selected' : ''}" onclick="selectShape(${idx},'${s.id}','${s.label}')">
-        <img src="${SHAPE_IMAGES[s.id]}" alt="${s.label}" loading="lazy">
-        <div class="shape-card-label">${s.label}</div>
-      </div>`).join('');
-  })() : '';
-
-  // mattress buttons
-  const withBtn    = `<div class="toggle-btn ${d.mattress==='With Mattress'?'selected':''}" onclick="selectMattress(${idx},'With Mattress')">With Mattress</div>`;
-  const withoutBtn = `<div class="toggle-btn ${d.mattress==='Without Mattress'?'selected':''}" onclick="selectMattress(${idx},'Without Mattress')">Without Mattress</div>`;
-
-  // photos
-  const photosHTML = t.photoData.length > 0
-    ? '<div class="photo-preview-row">' + t.photoData.map((p, pi) => `
-        <div class="photo-thumb-wrap">
-          <img class="photo-thumb" src="${p}" onclick="openLightbox('${p}')">
-          <button class="photo-remove" onclick="removeTrolleyPhoto(${idx},${pi})">×</button>
-        </div>`).join('') + '</div>'
-    : '';
-
-  return `
-    <div class="trolley-card" id="trolleyCard_${idx}">
-      <div class="trolley-card-header">
-        <div>
-          <div class="trolley-card-title">Trolley ${idx + 1}</div>
-          <div class="trolley-card-summary">${totalPieces > 0 ? totalPieces + ' pieces' : 'Empty'}</div>
-        </div>
-        <button class="trolley-remove" onclick="removeTrolley(${idx})">×</button>
-      </div>
-      <div class="trolley-card-body">
-
-        <div class="field-group">
-          <div class="field-label">Trolley ID / Label</div>
-          <input type="text" placeholder="e.g. T-1, Batch A" value="${t.label}"
-            oninput="trolleys[${idx}].label=this.value">
-        </div>
-
-        ${itemsHTML}
-        ${totalPieces > 0 ? `<div style="font-size:12px;color:var(--text3);text-align:right;margin-bottom:8px;">Total: <strong style="color:var(--accent)">${totalPieces} pcs</strong></div>` : ''}
-
-        <div class="add-frame-panel collapsed" id="addPanel_${idx}">
-          <div class="panel-header" onclick="togglePanel(${idx})">
-            <div class="panel-header-title">+ Add Frame</div>
-            <div class="panel-toggle">▼</div>
-          </div>
-          <div class="panel-body">
-            <div class="picker-label">Size</div>
-            <div class="pill-row">
-              ${['Single 2.5ft','Single 3ft','Double 4ft','Queen 5ft','King 6ft'].map(sz =>
-                `<div class="pill ${d.size===sz?'selected':''}" onclick="selectSize(${idx},'${sz}')">${sz}</div>`
-              ).join('')}
-            </div>
-            ${d.size ? `
-            <div class="picker-label">Shape</div>
-            <div class="shape-grid">${shapeGridHTML}</div>` : ''}
-            ${d.shape ? `
-            <div class="picker-label">Mattress</div>
-            <div class="toggle-row">${withBtn}${withoutBtn}</div>` : ''}
-            ${d.mattress ? `
-            <div class="picker-label">Pieces</div>
-            <div class="pieces-row">
-              <input type="number" id="piecesInput_${idx}" placeholder="Number of pieces" min="1" inputmode="numeric" pattern="[0-9]*">
-              <button class="btn-secondary" onclick="addLineItem(${idx})">Add</button>
-            </div>` : ''}
-          </div>
-        </div>
-
-        <div class="optional-toggle" onclick="toggleOptional(${idx})">
-          <span class="icon">⚙️</span>
-          <span>+ Oven Details (optional)</span>
-        </div>
-        <div class="optional-details" id="optDetails_${idx}">
-          <div class="optional-row">
-            <div>
-              <div class="field-label">Temperature</div>
-              <div class="unit-input">
-                <input type="number" inputmode="decimal" placeholder="e.g. 200" value="${t.temp}"
-                  oninput="trolleys[${idx}].temp=this.value">
-                <div class="unit-label">°C</div>
-              </div>
-            </div>
-            <div>
-              <div class="field-label">Duration</div>
-              <div class="unit-input">
-                <input type="number" inputmode="numeric" placeholder="e.g. 20" value="${t.duration}"
-                  oninput="trolleys[${idx}].duration=this.value">
-                <div class="unit-label">min</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="field-label" style="margin-top:10px;">Proof Photos (optional)</div>
-        <div class="photo-area" onclick="document.getElementById('photoInput_${idx}').click()">
-          <div class="icon">📸</div>
-          <div class="label">Tap to add photos</div>
-          <div class="hint">Multiple allowed</div>
-        </div>
-        <input type="file" id="photoInput_${idx}" accept="image/*" multiple style="display:none"
-          onchange="handleTrolleyPhotos(${idx}, event)">
-        ${photosHTML}
-
-      </div>
-    </div>`;
+function renderShapeGrid(size) {
+  const src = window.SHAPES_ACTIVE || SHAPES;
+  const available = src.filter(s => s.sizes.includes(size));
+  document.getElementById('shapeGrid').innerHTML = available.map(s =>
+    '<div class="shape-card" id="sc_' + s.id + '" onclick="selectShape(\'' + s.id + '\',\'' + s.label + '\')">'
+    + '<img src="' + SHAPE_IMAGES[s.id] + '" alt="' + s.label + '" loading="lazy">'
+    + '<div class="shape-card-label">' + s.label + '</div></div>'
+  ).join('');
 }
 
-function togglePanel(idx) {
-  const panel = document.getElementById('addPanel_' + idx);
-  panel.classList.toggle('collapsed');
+function selectShape(id, label) {
+  draftShape = label; draftShapeId = id; draftMattress = null;
+  document.querySelectorAll('.shape-card').forEach(c => c.classList.remove('selected'));
+  const sc = document.getElementById('sc_' + id);
+  if (sc) sc.classList.add('selected');
+  const src = window.SHAPES_ACTIVE || SHAPES;
+  const shapeDef = src.find(s => s.id === id);
+  const mattressType = shapeDef ? (shapeDef.mattress || 'both') : 'both';
+  const row = document.getElementById('mattressRow');
+  const withBtn    = '<div class="toggle-btn" onclick="selectMattress(this,\'With Mattress\')">With Mattress</div>';
+  const withoutBtn = '<div class="toggle-btn" onclick="selectMattress(this,\'Without Mattress\')">Without Mattress</div>';
+  if (mattressType === 'with')    { row.innerHTML = withBtn; document.getElementById('mattressStep').style.display='block'; selectMattress(row.firstChild,'With Mattress'); return; }
+  if (mattressType === 'without') { row.innerHTML = withoutBtn; document.getElementById('mattressStep').style.display='block'; selectMattress(row.firstChild,'Without Mattress'); return; }
+  row.innerHTML = withBtn + withoutBtn;
+  document.getElementById('mattressStep').style.display = 'block';
+  document.getElementById('piecesStep').style.display = 'none';
 }
 
-function toggleOptional(idx) {
-  const el = document.getElementById('optDetails_' + idx);
-  el.classList.toggle('open');
+function selectMattress(el, val) {
+  draftMattress = val;
+  document.querySelectorAll('#mattressRow .toggle-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('piecesStep').style.display = 'block';
+  document.getElementById('piecesInput').focus();
 }
 
-// ── PICKER ────────────────────────────────────────
-function selectSize(idx, size) {
-  drafts[idx] = { size, shape: null, mattress: null };
-  // refresh shape list from catalogue if loaded
-  renderTrolleys();
-  // reopen panel
-  setTimeout(() => {
-    const panel = document.getElementById('addPanel_' + idx);
-    if (panel) panel.classList.remove('collapsed');
-  }, 50);
-}
-
-function selectShape(idx, id, label) {
-  // determine mattress options
-  const shapeDef = (window.SHAPES_ACTIVE || SHAPES).find(s => s.id === id);
-  const mattress = shapeDef ? (shapeDef.mattress || 'both') : 'both';
-  drafts[idx].shape = label;
-  drafts[idx].mattress = null;
-  drafts[idx].shapeId = id;
-  // auto-select if restricted
-  if (mattress === 'with')    { drafts[idx].mattress = 'With Mattress'; }
-  if (mattress === 'without') { drafts[idx].mattress = 'Without Mattress'; }
-  renderTrolleys();
-  setTimeout(() => {
-    const panel = document.getElementById('addPanel_' + idx);
-    if (panel) panel.classList.remove('collapsed');
-  }, 50);
-}
-
-function selectMattress(idx, val) {
-  drafts[idx].mattress = val;
-  renderTrolleys();
-  setTimeout(() => {
-    const panel = document.getElementById('addPanel_' + idx);
-    if (panel) panel.classList.remove('collapsed');
-    const inp = document.getElementById('piecesInput_' + idx);
-    if (inp) inp.focus();
-  }, 50);
-}
-
-function addLineItem(idx) {
-  const d = drafts[idx];
-  if (!d || !d.size || !d.shape || !d.mattress) { showToast('Complete frame selection', 'error'); return; }
-  const inp = document.getElementById('piecesInput_' + idx);
-  const pieces = parseInt(inp ? inp.value : 0);
+function addLineItem() {
+  if (!draftSize || !draftShape || !draftMattress) { showToast('Complete frame selection', 'error'); return; }
+  const pieces = parseInt(document.getElementById('piecesInput').value);
   if (!pieces || pieces < 1) { showToast('Enter valid piece count', 'error'); return; }
-  trolleys[idx].lineItems.push({ size: d.size, shape: d.shape, mattress: d.mattress, pieces });
-  drafts[idx] = { size: null, shape: null, mattress: null };
-  renderTrolleys();
+  lineItems.push({ size: draftSize, shape: draftShape, mattress: draftMattress, pieces });
+  renderLineItems();
+  // Reset draft
+  draftSize = null; draftShape = null; draftMattress = null; draftShapeId = null;
+  document.querySelectorAll('#sizeRow .pill').forEach(p => p.classList.remove('selected'));
+  document.querySelectorAll('.shape-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('shapeStep').style.display = 'none';
+  document.getElementById('mattressStep').style.display = 'none';
+  document.getElementById('piecesStep').style.display = 'none';
+  document.getElementById('piecesInput').value = '';
+  document.getElementById('addFramePanel').classList.add('collapsed');
   showToast('Frame added \u2713', 'success');
 }
 
-function removeLineItem(tIdx, lIdx) {
-  trolleys[tIdx].lineItems.splice(lIdx, 1);
-  renderTrolleys();
+function removeLineItem(i) {
+  lineItems.splice(i, 1);
+  renderLineItems();
+}
+
+function renderLineItems() {
+  const el = document.getElementById('lineItemsList');
+  if (lineItems.length === 0) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:4px 0 10px;">No frames added yet.</div>';
+    return;
+  }
+  const total = lineItems.reduce((s,l) => s+l.pieces, 0);
+  el.innerHTML = lineItems.map((l,i) =>
+    '<div class="line-item">'
+    + '<div class="line-item-info"><div class="line-item-name">' + l.shape + ' \u2022 ' + l.mattress + '</div>'
+    + '<div class="line-item-sub">' + l.size + '</div></div>'
+    + '<div class="line-item-pieces">' + l.pieces + '</div>'
+    + '<button class="line-item-remove" onclick="removeLineItem(' + i + ')">×</button></div>'
+  ).join('')
+  + '<div style="font-size:12px;color:var(--text3);text-align:right;margin-bottom:8px;">Total: <strong style="color:var(--accent)">' + total + ' pcs</strong></div>';
 }
 
 // ── PHOTOS ────────────────────────────────────────
-function handleTrolleyPhotos(idx, e) {
+function handleProofPhotos(e) {
   Array.from(e.target.files).forEach(file => {
     const reader = new FileReader();
-    reader.onload = ev => { trolleys[idx].photoData.push(ev.target.result); renderTrolleys(); };
+    reader.onload = ev => { proofPhotosData.push(ev.target.result); renderProofPreviews(); };
     reader.readAsDataURL(file);
   });
 }
 
-function removeTrolleyPhoto(tIdx, pIdx) {
-  trolleys[tIdx].photoData.splice(pIdx, 1);
-  renderTrolleys();
+function renderProofPreviews() {
+  document.getElementById('proofPhotoPreview').innerHTML = proofPhotosData.map((d,i) =>
+    '<div class="photo-thumb-wrap">'
+    + '<img class="photo-thumb" src="' + d + '" onclick="openLightbox(\'' + d + '\')">'
+    + '<button class="photo-remove" onclick="removeProof(' + i + ')">×</button></div>'
+  ).join('');
 }
+
+function removeProof(i) { proofPhotosData.splice(i,1); renderProofPreviews(); }
 
 // ── DRIVE ─────────────────────────────────────────
 async function ensurePhotosFolderId() {
@@ -736,13 +685,13 @@ async function loadDB() {
       const content = await fetch('https://www.googleapis.com/drive/v3/files/' + dbFileId + '?alt=media',
         { headers: { Authorization: 'Bearer ' + accessToken } });
       const db = await content.json();
-      sessions = db.sessions || [];
-    } else { sessions = []; dbFileId = null; }
-  } catch(e) { sessions = []; dbFileId = null; }
+      trolleyEntries = db.trolleys || [];
+    } else { trolleyEntries = []; dbFileId = null; }
+  } catch(e) { trolleyEntries = []; dbFileId = null; }
 }
 
 async function saveDB() {
-  const blob = new Blob([JSON.stringify({ sessions }, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ trolleys: trolleyEntries }, null, 2)], { type: 'application/json' });
   if (dbFileId) {
     await fetch('https://www.googleapis.com/upload/drive/v3/files/' + dbFileId + '?uploadType=media',
       { method: 'PATCH', headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' }, body: blob });
@@ -757,70 +706,70 @@ async function saveDB() {
 }
 
 // ── SUBMIT ────────────────────────────────────────
-async function submitSession() {
-  if (trolleys.length === 0) { showToast('Add at least one trolley', 'error'); return; }
-  const emptyTrolleys = trolleys.filter(t => t.lineItems.length === 0);
-  if (emptyTrolleys.length > 0) { showToast('Each trolley needs at least one frame', 'error'); return; }
+async function submitTrolley() {
+  if (lineItems.length === 0) { showToast('Add at least one frame', 'error'); return; }
+  if (!selectedColour) { showToast('Select a coating colour', 'error'); return; }
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
 
   try {
-    const sid = 'CS' + Date.now();
+    const tid = 'CL' + Date.now();
     const now = new Date().toISOString();
-
-    // Upload photos per trolley
-    const savedTrolleys = [];
-    for (let i = 0; i < trolleys.length; i++) {
-      const t = trolleys[i];
-      const photoIds = [];
-      for (let p = 0; p < t.photoData.length; p++) {
-        const pid = await uploadPhoto(t.photoData[p], 'trolley_' + sid + '_' + i + '_' + p + '.jpg');
-        photoIds.push(pid);
-      }
-      savedTrolleys.push({
-        label: t.label,
-        lineItems: [...t.lineItems],
-        temp: t.temp,
-        duration: t.duration,
-        photoIds
-      });
+    const photoIds = [];
+    for (let i = 0; i < proofPhotosData.length; i++) {
+      photoIds.push(await uploadPhoto(proofPhotosData[i], 'proof_' + tid + '_' + i + '.jpg'));
     }
-
-    const session = {
-      id: sid, timestamp: now,
-      trolleys: savedTrolleys,
+    const entry = {
+      id: tid, timestamp: now,
+      label: document.getElementById('trolleyLabel').value.trim(),
+      colour: selectedColour,
+      lineItems: [...lineItems],
+      temp: document.getElementById('tempInput').value.trim(),
+      duration: document.getElementById('durationInput').value.trim(),
+      photoIds,
       notes: document.getElementById('notesInput').value.trim(),
       status: 'active', audit: []
     };
-
-    sessions.unshift(session);
+    trolleyEntries.unshift(entry);
     await saveDB();
-    showToast('Session saved \u2713', 'success');
+    showToast('Trolley saved \u2713', 'success');
     resetForm();
   } catch(e) {
-    console.error(e); showToast('Error saving session', 'error');
+    console.error(e); showToast('Error saving', 'error');
   }
-  btn.disabled = false; btn.textContent = 'Submit Session';
+  btn.disabled = false; btn.textContent = 'Submit Trolley';
 }
 
 function resetForm() {
-  trolleys = []; drafts = {};
+  lineItems = []; proofPhotosData = []; selectedColour = null;
+  draftSize = null; draftShape = null; draftMattress = null;
+  document.getElementById('trolleyLabel').value = '';
+  document.getElementById('tempInput').value = '';
+  document.getElementById('durationInput').value = '';
   document.getElementById('notesInput').value = '';
-  renderTrolleys();
+  document.getElementById('proofPhotoPreview').innerHTML = '';
+  document.getElementById('proofPhotoInput').value = '';
+  document.querySelectorAll('.colour-pill').forEach(p => p.classList.remove('selected'));
+  document.querySelectorAll('#sizeRow .pill').forEach(p => p.classList.remove('selected'));
+  document.getElementById('shapeStep').style.display = 'none';
+  document.getElementById('mattressStep').style.display = 'none';
+  document.getElementById('piecesStep').style.display = 'none';
+  document.getElementById('addFramePanel').classList.add('collapsed');
+  renderLineItems();
 }
 
-async function loadSessions() { await loadDB(); renderLog(); renderManager(); renderTrolleys(); }
+async function loadTrolleys() { await loadDB(); renderLog(); renderManager(); renderLineItems(); }
 
 // ── RENDER LOG ────────────────────────────────────
 function renderLog() {
   const list = document.getElementById('logList');
-  let filtered = sessions;
-  if (logFilter !== 'all') filtered = sessions.filter(s => s.status === logFilter);
+  let filtered = trolleyEntries;
+  if (logFilter !== 'all') filtered = trolleyEntries.filter(e => e.status === logFilter);
   if (filtered.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>No sessions yet</p></div>'; return;
+    list.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>No trolleys yet</p></div>'; return;
   }
-  list.innerHTML = filtered.map(s => sessionCardHTML(s)).join('');
+  list.innerHTML = filtered.map(e => trolleyCardHTML(e)).join('');
   setTimeout(loadPhotosForVisible, 100);
 }
 
@@ -832,70 +781,65 @@ function filterLog(f, el) {
 
 // ── RENDER MANAGER ────────────────────────────────
 function renderManager() {
-  const active = sessions.filter(s => s.status !== 'deleted');
-  const today  = sessions.filter(s => s.timestamp && s.timestamp.startsWith(new Date().toISOString().slice(0,10)));
-  const totalTrolleys = active.reduce((sum, s) => sum + (s.trolleys||[]).length, 0);
-  const totalPieces   = active.reduce((sum, s) => (s.trolleys||[]).reduce((a, t) => a + (t.lineItems||[]).reduce((b, l) => b + l.pieces, 0), 0) + sum, 0);
-  document.getElementById('statSessions').textContent = sessions.length;
+  const active = trolleyEntries.filter(e => e.status !== 'deleted');
+  const today  = trolleyEntries.filter(e => e.timestamp && e.timestamp.startsWith(new Date().toISOString().slice(0,10)));
+  const totalPieces = active.reduce((s,e) => s + (e.lineItems||[]).reduce((a,l) => a+l.pieces, 0), 0);
+  document.getElementById('statTrolleys').textContent = active.length;
   document.getElementById('statToday').textContent    = today.length;
-  document.getElementById('statTrolleys').textContent = totalTrolleys;
   document.getElementById('statPieces').textContent   = totalPieces;
 
   const list = document.getElementById('managerList');
-  let filtered = sessions.filter(s => s.status !== 'deleted');
+  let filtered = trolleyEntries.filter(e => e.status !== 'deleted');
   const now = new Date();
-  if (managerFilter === 'week')  { const wa = new Date(now - 7*24*60*60*1000).toISOString(); filtered = filtered.filter(s => s.timestamp > wa); }
-  if (managerFilter === 'month') { const ma = new Date(now.getFullYear(), now.getMonth(), 1).toISOString(); filtered = filtered.filter(s => s.timestamp > ma); }
+  if (managerFilter === 'week')  { const wa = new Date(now-7*24*60*60*1000).toISOString(); filtered = filtered.filter(e => e.timestamp > wa); }
+  if (managerFilter === 'month') { const ma = new Date(now.getFullYear(), now.getMonth(), 1).toISOString(); filtered = filtered.filter(e => e.timestamp > ma); }
   if (filtered.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="icon">\uD83D\uDCCA</div><p>No sessions in this range</p></div>'; return;
+    list.innerHTML = '<div class="empty-state"><div class="icon">\uD83D\uDCCA</div><p>No trolleys in this range</p></div>'; return;
   }
 
   // Group by date
   var byDate = {};
-  filtered.forEach(function(s) {
-    var dk = s.timestamp ? s.timestamp.slice(0,10) : 'unknown';
+  filtered.forEach(function(e) {
+    var dk = e.timestamp ? e.timestamp.slice(0,10) : 'unknown';
     if (!byDate[dk]) byDate[dk] = [];
-    byDate[dk].push(s);
+    byDate[dk].push(e);
   });
   var sortedDates = Object.keys(byDate).sort(function(a,b){ return b.localeCompare(a); });
   var out = '';
   sortedDates.forEach(function(dk) {
     var group = byDate[dk];
-    var dayTrolleys = group.reduce(function(s,x){ return s+(x.trolleys||[]).length; }, 0);
-    var dayPieces   = group.reduce(function(s,x){ return s+(x.trolleys||[]).reduce(function(a,t){ return a+(t.lineItems||[]).reduce(function(b,l){ return b+l.pieces; },0); },0); }, 0);
+    var dayPieces = group.reduce(function(s,e){ return s+(e.lineItems||[]).reduce(function(a,l){ return a+l.pieces; },0); }, 0);
     var todayKey = new Date().toISOString().slice(0,10);
     var label = dk === todayKey ? 'Today' : new Date(dk+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
-    // Aggregate frames for the day
+    // Aggregate by colour + frame
     var aggMap = {};
-    group.forEach(function(s){ (s.trolleys||[]).forEach(function(t){ (t.lineItems||[]).forEach(function(l){
-      var key = l.size+'|'+l.shape+'|'+l.mattress;
+    group.forEach(function(e){ (e.lineItems||[]).forEach(function(l){
+      var key = (e.colour||'?')+'|'+l.size+'|'+l.shape+'|'+l.mattress;
       aggMap[key] = (aggMap[key]||0)+l.pieces;
-    }); }); });
+    }); });
     var aggRows = '';
     Object.keys(aggMap).forEach(function(k){
       var p = k.split('|');
-      aggRows += '<tr><td>'+p[0]+'</td><td>'+p[1]+'</td><td>'+p[2]+'</td><td>'+aggMap[k]+'</td></tr>';
+      aggRows += '<tr><td>'+p[0]+'</td><td>'+p[1]+'</td><td>'+p[2]+'</td><td>'+p[3]+'</td><td>'+aggMap[k]+'</td></tr>';
     });
     out += '<div style="margin-bottom:20px;">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
       +'<div><div style="font-size:14px;font-weight:800;color:var(--text);">'+label+'</div>'
-      +'<div style="font-size:11px;color:var(--text3);margin-top:2px;">'+group.length+' session'+(group.length>1?'s':'')+' \u2022 '+dayTrolleys+' trolley'+(dayTrolleys>1?'s':'')+'</div></div>'
+      +'<div style="font-size:11px;color:var(--text3);margin-top:2px;">'+group.length+' trolley'+(group.length>1?'s':'')+'</div></div>'
       +'<div style="font-size:20px;font-weight:800;color:var(--accent);">'+dayPieces+' <span style="font-size:11px;font-weight:600;color:var(--text3);">pcs</span></div>'
       +'</div>'
       +'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px;">'
-      +'<table class="sku-table"><thead><tr><th>Size</th><th>Shape</th><th>Mattress</th><th>Pcs</th></tr></thead><tbody>'+aggRows+'</tbody></table>'
+      +'<table class="sku-table"><thead><tr><th>Colour</th><th>Size</th><th>Shape</th><th>Mattress</th><th>Pcs</th></tr></thead><tbody>'+aggRows+'</tbody></table>'
       +'</div>'
-      +'<div>'+group.map(function(s){
-        var tRows = (s.trolleys||[]).map(function(t,i){
-          return '<div style="font-size:12px;font-weight:700;color:var(--text);margin-top:4px;">'
-            +'Trolley '+(i+1)+(t.label?' ('+t.label+')':'')+': '
-            +(t.lineItems||[]).map(function(l){ return l.pieces+' '+l.shape+' '+l.size; }).join(', ')
-            +(t.temp?' \u2022 '+t.temp+'\u00b0C':'')+(t.duration?' \u2022 '+t.duration+'min':'')
-            +'</div>';
-        }).join('');
+      +'<div>'+group.map(function(e){
+        var timeStr = new Date(e.timestamp).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+        var details = (e.temp?e.temp+'\u00b0C':'')+(e.duration?' '+e.duration+'min':'');
         return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:6px;">'
-          +'<div style="font-size:11px;color:var(--text3);">'+new Date(s.timestamp).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})+'</div>'
-          +tRows+'</div>';
+          +'<div style="display:flex;justify-content:space-between;align-items:center;">'
+          +'<div style="font-size:13px;font-weight:700;color:var(--text);">'+(e.label||'Unlabelled')+' \u2014 <span style="color:var(--accent);">'+e.colour+'</span></div>'
+          +'<div style="font-size:11px;color:var(--text3);">'+timeStr+(details?' \u2022 '+details:'')+'</div></div>'
+          +(e.lineItems||[]).map(function(l){ return '<div style="font-size:12px;color:var(--text);margin-top:4px;">'+l.size+' \u2022 '+l.shape+' \u2022 '+l.mattress+' \u2014 '+l.pieces+' pcs</div>'; }).join('')
+          +'</div>';
       }).join('')+'</div></div>';
   });
   list.innerHTML = out;
@@ -908,39 +852,34 @@ function filterManager(f, el) {
   el.classList.add('active'); renderManager();
 }
 
-// ── SESSION CARD HTML ─────────────────────────────
-function sessionCardHTML(s) {
-  const dt = s.timestamp ? new Date(s.timestamp).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '--';
-  const badge = '<span class="entry-badge badge-' + s.status + '">' + s.status.charAt(0).toUpperCase() + s.status.slice(1) + '</span>';
-  const trolleyRows = (s.trolleys||[]).map((t, i) => {
-    const totalPieces = (t.lineItems||[]).reduce((a,l) => a+l.pieces, 0);
-    const skuRows = (t.lineItems||[]).map(l =>
-      '<tr><td>'+l.size+'</td><td>'+l.shape+'</td><td>'+l.mattress+'</td><td>'+l.pieces+'</td></tr>'
-    ).join('');
-    const details = (t.temp ? '\u{1F321}\uFE0F ' + t.temp + '\u00b0C' : '') + (t.duration ? '  \u23F1\uFE0F ' + t.duration + 'min' : '');
-    const allPhotoIds = t.photoIds || [];
-    const photosHTML = allPhotoIds.length > 0
-      ? '<div class="session-photos">' + allPhotoIds.map(pid =>
-          '<img class="session-photo" id="photo_' + pid + '" src="" onclick="openLightbox(this.src)">'
-        ).join('') + '</div>' : '';
-    return '<div class="trolley-summary">'
-      + '<div class="trolley-summary-title">Trolley ' + (i+1) + (t.label ? ' — ' + t.label : '') + (details ? '  <span style="font-size:11px;color:var(--text3);">' + details + '</span>' : '') + '</div>'
-      + '<table class="sku-table"><thead><tr><th>Size</th><th>Shape</th><th>Mattress</th><th>Pcs</th></tr></thead><tbody>' + skuRows + '</tbody></table>'
-      + '<div class="total-row"><span>Subtotal</span><strong>' + totalPieces + ' pcs</strong></div>'
-      + photosHTML + '</div>';
-  }).join('');
-  const totalPieces = (s.trolleys||[]).reduce((sum,t) => sum + (t.lineItems||[]).reduce((a,l) => a+l.pieces,0),0);
-  const auditHTML = s.audit && s.audit.length > 0 ? s.audit.map(a => '<div class="audit-row">'+a+'</div>').join('') : '';
-  const actions = s.status !== 'deleted'
-    ? '<div class="session-actions"><button class="btn-secondary" onclick="openEdit(\''+s.id+'\')">Edit</button><button class="btn-danger" onclick="deleteSession(\''+s.id+'\')">Delete</button></div>'
+// ── TROLLEY CARD HTML (Log) ───────────────────────
+function trolleyCardHTML(e) {
+  const dt = e.timestamp ? new Date(e.timestamp).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '--';
+  const badge = '<span class="entry-badge badge-' + e.status + '">' + e.status.charAt(0).toUpperCase()+e.status.slice(1) + '</span>';
+  const totalPieces = (e.lineItems||[]).reduce((a,l) => a+l.pieces, 0);
+  const skuRows = (e.lineItems||[]).map(l =>
+    '<tr><td>'+l.size+'</td><td>'+l.shape+'</td><td>'+l.mattress+'</td><td>'+l.pieces+'</td></tr>'
+  ).join('');
+  const details = [(e.temp?e.temp+'\u00b0C':''), (e.duration?e.duration+' min':'')].filter(Boolean).join('  •  ');
+  const allPhotoIds = e.photoIds || [];
+  const photosHTML = allPhotoIds.length > 0
+    ? '<div class="session-photos">' + allPhotoIds.map(pid =>
+        '<img class="session-photo" id="photo_' + pid + '" src="" onclick="openLightbox(this.src)">'
+      ).join('') + '</div>' : '';
+  const auditHTML = (e.audit||[]).map(a => '<div class="audit-row">'+a+'</div>').join('');
+  const actions = e.status !== 'deleted'
+    ? '<div class="session-actions"><button class="btn-secondary" onclick="openEdit(\''+e.id+'\')">Edit</button><button class="btn-danger" onclick="deleteEntry(\''+e.id+'\')">Delete</button></div>'
     : '';
-  return '<div class="session-card ' + (s.status==='deleted'?'deleted':'') + '" id="card_'+s.id+'">'
+  return '<div class="session-card ' + (e.status==='deleted'?'deleted':'') + '" id="card_'+e.id+'">'
     + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">'
-    + '<div><div class="session-dt">'+dt+'</div><div class="session-id">'+s.id+'</div></div>' + badge + '</div>'
-    + trolleyRows
-    + '<div class="total-row" style="margin-top:8px;"><span>Session Total</span><strong>'+totalPieces+' pcs</strong></div>'
-    + (s.notes ? '<div style="font-size:12px;color:var(--text2);margin-top:8px;">\uD83D\uDCDD '+s.notes+'</div>' : '')
-    + auditHTML + actions + '</div>';
+    + '<div><div class="session-dt">'+dt+'</div>'
+    + '<div style="font-size:13px;font-weight:700;color:var(--accent);margin-top:2px;">'+(e.label||'Unlabelled')+' \u2014 '+e.colour+'</div>'
+    + (details?'<div style="font-size:12px;color:var(--text3);margin-top:2px;">\u{1F321}\uFE0F '+details+'</div>':'')
+    + '<div class="session-id">'+e.id+'</div></div>' + badge + '</div>'
+    + '<table class="sku-table"><thead><tr><th>Size</th><th>Shape</th><th>Mattress</th><th>Pcs</th></tr></thead><tbody>'+skuRows+'</tbody></table>'
+    + '<div class="total-row"><span>Total Pieces</span><strong>'+totalPieces+'</strong></div>'
+    + (e.notes?'<div style="font-size:12px;color:var(--text2);margin-top:8px;">\uD83D\uDCDD '+e.notes+'</div>':'')
+    + photosHTML + auditHTML + actions + '</div>';
 }
 
 // ── LOAD PHOTOS ───────────────────────────────────
@@ -960,70 +899,51 @@ async function loadPhotosForVisible() {
 // ── EDIT ──────────────────────────────────────────
 function openEdit(id) {
   editingId = id;
-  const s = sessions.find(x => x.id === id); if (!s) return;
-  document.getElementById('editModalBody').innerHTML = `
-    <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;font-size:13px;color:var(--text2);">
-      Trolley contents are locked. Delete and re-enter to change frames.
-      ${(s.trolleys||[]).map((t,i) => '<div style="margin-top:6px;font-weight:700;color:var(--text);">Trolley '+(i+1)+(t.label?' ('+t.label+')':'')+': '+(t.lineItems||[]).map(l=>l.pieces+' '+l.shape).join(', ')+'</div>').join('')}
-    </div>
-    <div class="field-group">
-      <div class="field-label">Notes</div>
-      <textarea id="editNotes" rows="3">${s.notes||''}</textarea>
-    </div>`;
+  const e = trolleyEntries.find(x => x.id === id); if (!e) return;
+  document.getElementById('editModalBody').innerHTML =
+    '<div style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;font-size:13px;color:var(--text2);">'
+    + 'Frame contents are locked. Delete and re-enter to change frames.<br><br>'
+    + '<strong>Colour: ' + e.colour + '</strong><br>'
+    + (e.lineItems||[]).map(l => '<div style="margin-top:4px;font-weight:700;color:var(--text);">'+l.size+' \u2022 '+l.shape+' \u2022 '+l.mattress+' \u2014 '+l.pieces+' pcs</div>').join('')
+    + '</div>'
+    + '<div class="field-group"><div class="field-label">Notes</div><textarea id="editNotes" rows="3">' + (e.notes||'') + '</textarea></div>';
   document.getElementById('editModal').classList.add('open');
 }
 
 async function saveEdit() {
-  const s = sessions.find(x => x.id === editingId); if (!s) return;
+  const e = trolleyEntries.find(x => x.id === editingId); if (!e) return;
   const newNotes = document.getElementById('editNotes').value.trim();
-  s.audit = s.audit || [];
-  s.audit.push('Edited ' + new Date().toLocaleString('en-IN') + ' — Notes: "' + (s.notes||'') + '" → "' + newNotes + '"');
-  s.notes = newNotes; s.status = 'edited';
-  try {
-    await saveDB(); closeModal('editModal'); renderLog(); renderManager();
-    showToast('Session updated \u2713', 'success');
-  } catch(e) { showToast('Error saving', 'error'); }
+  e.audit = e.audit || [];
+  e.audit.push('Edited ' + new Date().toLocaleString('en-IN') + ' \u2014 Notes: "' + (e.notes||'') + '" \u2192 "' + newNotes + '"');
+  e.notes = newNotes; e.status = 'edited';
+  try { await saveDB(); closeModal('editModal'); renderLog(); renderManager(); showToast('Updated \u2713', 'success'); }
+  catch(err) { showToast('Error saving', 'error'); }
 }
 
-async function deleteSession(id) {
-  if (!confirm('Mark this session as deleted? The record will be kept.')) return;
-  const s = sessions.find(x => x.id === id); if (!s) return;
-  s.audit = s.audit || [];
-  s.audit.push('Deleted ' + new Date().toLocaleString('en-IN'));
-  s.status = 'deleted';
-  try { await saveDB(); renderLog(); renderManager(); showToast('Session deleted', 'success'); }
-  catch(e) { showToast('Error saving', 'error'); }
+async function deleteEntry(id) {
+  if (!confirm('Mark this trolley as deleted? The record will be kept.')) return;
+  const e = trolleyEntries.find(x => x.id === id); if (!e) return;
+  e.audit = e.audit || [];
+  e.audit.push('Deleted ' + new Date().toLocaleString('en-IN'));
+  e.status = 'deleted';
+  try { await saveDB(); renderLog(); renderManager(); showToast('Deleted', 'success'); }
+  catch(err) { showToast('Error saving', 'error'); }
 }
 
 // ── EXPORT CSV ────────────────────────────────────
 function exportCSV() {
-  const rows = [['Session ID','Timestamp','Trolley','Trolley Label','Temp (°C)','Duration (min)','Size','Shape','Mattress','Pieces','Notes','Status']];
-  sessions.forEach(s => {
-    (s.trolleys||[]).forEach((t, i) => {
-      (t.lineItems||[]).forEach(l => {
-        rows.push([s.id, s.timestamp, i+1, t.label||'', t.temp||'', t.duration||'', l.size, l.shape, l.mattress, l.pieces, s.notes||'', s.status]);
-      });
+  const rows = [['Trolley ID','Timestamp','Label','Colour','Temp (°C)','Duration (min)','Size','Shape','Mattress','Pieces','Notes','Status']];
+  trolleyEntries.forEach(e => {
+    (e.lineItems||[]).forEach(l => {
+      rows.push([e.id, e.timestamp, e.label||'', e.colour||'', e.temp||'', e.duration||'', l.size, l.shape, l.mattress, l.pieces, e.notes||'', e.status]);
     });
   });
   const csv = rows.map(r => r.map(v => '"'+v+'"').join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = 'coatinglens_' + new Date().toISOString().slice(0,10) + '.csv';
-  a.click();
-}
-
-// ── UTILS ─────────────────────────────────────────
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function openLightbox(src) { if (!src) return; document.getElementById('lightboxImg').src = src; document.getElementById('lightbox').classList.add('open'); }
-function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
-function showToast(msg, type) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast show ' + (type||'');
-  setTimeout(() => t.classList.remove('show'), 2800);
+  const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'coatinglens_' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
 }
 
 // ── CATALOGUE ─────────────────────────────────────
-
 function buildDefaultCatalogue() {
   var DQK = ['Double 4ft','Queen 5ft','King 6ft'];
   return { shapes: [
@@ -1053,15 +973,11 @@ async function loadCatalogue() {
       var content = await fetch('https://www.googleapis.com/drive/v3/files/' + data.files[0].id + '?alt=media',
         { headers: { Authorization: 'Bearer ' + accessToken } });
       catalogue = await content.json();
-    } else {
-      catalogue = buildDefaultCatalogue();
-    }
+    } else { catalogue = buildDefaultCatalogue(); }
   } catch(e) { catalogue = buildDefaultCatalogue(); }
-  // Merge any shapes in default that are missing from loaded catalogue
   var defaults = buildDefaultCatalogue();
   defaults.shapes.forEach(function(ds) {
-    var exists = catalogue.shapes.find(function(s){ return s.id === ds.id; });
-    if (!exists) catalogue.shapes.push(ds);
+    if (!catalogue.shapes.find(function(s){ return s.id === ds.id; })) catalogue.shapes.push(ds);
   });
   window.SHAPES_ACTIVE = catalogue.shapes;
 }
@@ -1071,7 +987,6 @@ async function saveCatalogue() {
   btn.textContent = 'Saving...'; btn.disabled = true;
   try {
     var blob = new Blob([JSON.stringify(catalogue, null, 2)], { type: 'application/json' });
-    // Always save to StockLens folder
     var q = encodeURIComponent("name='" + CATALOGUE_FILE + "' and '" + STOCKLENS_FOLDER + "' in parents and trashed=false");
     var res = await fetch('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id)',
       { headers: { Authorization: 'Bearer ' + accessToken } });
@@ -1088,7 +1003,7 @@ async function saveCatalogue() {
         { method: 'POST', headers: { Authorization: 'Bearer ' + accessToken }, body: form });
     }
     window.SHAPES_ACTIVE = catalogue.shapes;
-    showToast('Catalogue saved ✓ — synced to StockLens', 'success');
+    showToast('Catalogue saved \u2713 \u2014 synced to StockLens', 'success');
   } catch(e) { showToast('Error saving catalogue', 'error'); }
   btn.textContent = 'Save Changes'; btn.disabled = false;
 }
@@ -1102,16 +1017,15 @@ function renderCatalogueEditor() {
     catalogue.shapes.forEach(function(shape) {
       var enabled = shape.sizes.includes(size);
       var mattress = shape.mattress || 'both';
-      var sid = shape.id; var ssz = size;
       out += '<div class="cat-shape-row">';
-      out += '<img class="cat-shape-thumb" src="' + (SHAPE_IMAGES[shape.id] || '') + '" alt="' + shape.label + '">';
+      out += '<img class="cat-shape-thumb" src="' + (SHAPE_IMAGES[shape.id]||'') + '" alt="' + shape.label + '">';
       out += '<div class="cat-shape-name">' + shape.label + '</div>';
-      out += '<div class="cat-enabled"><span class="cat-enabled-label">' + (enabled ? 'ON' : 'OFF') + '</span>';
-      out += '<label class="switch"><input type="checkbox" ' + (enabled ? 'checked' : '') + ' data-shape="' + sid + '" data-size="' + ssz + '" onchange="toggleShapeSize(this)"><span class="slider"></span></label></div>';
+      out += '<div class="cat-enabled"><span class="cat-enabled-label">' + (enabled?'ON':'OFF') + '</span>';
+      out += '<label class="switch"><input type="checkbox" ' + (enabled?'checked':'') + ' data-shape="' + shape.id + '" data-size="' + size + '" onchange="toggleShapeSize(this)"><span class="slider"></span></label></div>';
       if (enabled) {
         out += '<div class="cat-toggle-group">';
-        out += '<button class="cat-toggle ' + (mattress === 'with' || mattress === 'both' ? 'on' : '') + '" data-shape="' + sid + '" data-type="with" onclick="toggleMattress(this)">W/ Matt</button>';
-        out += '<button class="cat-toggle ' + (mattress === 'without' || mattress === 'both' ? 'on' : '') + '" data-shape="' + sid + '" data-type="without" onclick="toggleMattress(this)">W/O Matt</button>';
+        out += '<button class="cat-toggle ' + (mattress==='with'||mattress==='both'?'on':'') + '" data-shape="' + shape.id + '" data-type="with" onclick="toggleMattress(this)">W/ Matt</button>';
+        out += '<button class="cat-toggle ' + (mattress==='without'||mattress==='both'?'on':'') + '" data-shape="' + shape.id + '" data-type="without" onclick="toggleMattress(this)">W/O Matt</button>';
         out += '</div>';
       }
       out += '</div>';
@@ -1122,27 +1036,21 @@ function renderCatalogueEditor() {
 }
 
 function toggleShapeSize(el) {
-  var shapeId = el.getAttribute('data-shape');
-  var size    = el.getAttribute('data-size');
-  var enabled = el.checked;
-  var shape = catalogue.shapes.find(function(s){ return s.id === shapeId; });
+  var shape = catalogue.shapes.find(function(s){ return s.id === el.getAttribute('data-shape'); });
   if (!shape) return;
-  if (enabled) { if (!shape.sizes.includes(size)) shape.sizes.push(size); }
+  var size = el.getAttribute('data-size');
+  if (el.checked) { if (!shape.sizes.includes(size)) shape.sizes.push(size); }
   else { shape.sizes = shape.sizes.filter(function(s){ return s !== size; }); }
   renderCatalogueEditor();
 }
 
 function toggleMattress(el) {
-  var shapeId = el.getAttribute('data-shape');
-  var type    = el.getAttribute('data-type');
-  var shape = catalogue.shapes.find(function(s){ return s.id === shapeId; });
+  var shape = catalogue.shapes.find(function(s){ return s.id === el.getAttribute('data-shape'); });
   if (!shape) return;
+  var type = el.getAttribute('data-type');
   var cur = shape.mattress || 'both';
-  if (type === 'with') {
-    shape.mattress = (cur === 'both') ? 'without' : (cur === 'without' ? 'both' : 'without');
-  } else {
-    shape.mattress = (cur === 'both') ? 'with' : (cur === 'with' ? 'both' : 'with');
-  }
+  if (type === 'with') { shape.mattress = cur==='both'?'without':cur==='without'?'both':'without'; }
+  else { shape.mattress = cur==='both'?'with':cur==='with'?'both':'with'; }
   renderCatalogueEditor();
 }
 
@@ -1151,9 +1059,18 @@ async function checkOwner(userEmail) {
   if (isOwner) document.getElementById('catalogueTab').style.display = 'block';
 }
 
+// ── UTILS ─────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openLightbox(src) { if (!src) return; document.getElementById('lightboxImg').src = src; document.getElementById('lightbox').classList.add('open'); }
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + (type||'');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
 
 // init
-renderTrolleys();
+renderLineItems();
 
 </script>
 <script src="https://accounts.google.com/gsi/client" async></script>
