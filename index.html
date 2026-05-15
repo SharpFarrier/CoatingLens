@@ -1043,6 +1043,9 @@ async function loadCatalogue() {
     console.warn('Catalogue load failed:', e);
     activeCatalogue = JSON.parse(JSON.stringify(DEFAULT_CATALOGUE));
   }
+  // Re-render if catalogue tab is currently visible
+  var catPage = document.getElementById('page-catalogue');
+  if (catPage && catPage.classList.contains('active')) renderCatalogueEditor();
 }
 
 async function saveCatalogue() {
@@ -1071,7 +1074,11 @@ async function saveCatalogue() {
 }
 
 function renderCatalogueEditor() {
-  if (!activeCatalogue) return;
+  if (!activeCatalogue) {
+    document.getElementById('catalogueEditor').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-size:14px;">Loading catalogue...</div>';
+    loadCatalogue().then(function(){ renderCatalogueEditor(); });
+    return;
+  }
   var ALL_SIZES = ['Single 2.5ft','Single 3ft','Double 4ft','Queen 5ft','King 6ft'];
   var out = '';
   ALL_SIZES.forEach(function(size) {
