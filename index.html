@@ -587,7 +587,7 @@ function renderShapeGrid(size) {
   var catId = draftCategory || 'bed';
   var available = getShapesForCategorySize(catId, size);
   document.getElementById('shapeGrid').innerHTML = available.map(function(s) {
-    return '<div class="shape-card" id="sc_' + s.id + '" onclick="selectShape(\'' + s.id + '\',\'' + s.label + '\')">'
+    return '<div class="shape-card" id="sc_' + s.id + '" onclick="selectShape(this,\'' + s.id + '\',\'' + s.label + '\')">'
       + '<img src="' + (SHAPE_IMAGES[s.id]||'') + '" alt="' + s.label + '" loading="lazy">'
       + '<div class="shape-card-label">' + s.label + '</div></div>';
   }).join('');
