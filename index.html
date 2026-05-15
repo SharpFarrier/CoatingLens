@@ -476,7 +476,7 @@ function signIn() {
         await loadTrolleys();
         var ownerEmail = await fetchUserProfile();
         await checkOwner(ownerEmail);
-        await loadCatalogue();
+        loadCatalogue().catch(function(e){ console.warn('Catalogue load failed:', e); });
       }
     }
   });
@@ -701,7 +701,9 @@ async function saveDB() {
     form.append('file', blob);
     const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
       { method: 'POST', headers: { Authorization: 'Bearer ' + accessToken }, body: form });
-    dbFileId = (await res.json()).id;
+    const saved = await res.json();
+    if (!saved.id) throw new Error('Drive save failed: ' + JSON.stringify(saved));
+    dbFileId = saved.id;
   }
 }
 
@@ -736,7 +738,8 @@ async function submitTrolley() {
     showToast('Trolley saved \u2713', 'success');
     resetForm();
   } catch(e) {
-    console.error(e); showToast('Error saving', 'error');
+    console.error('submitTrolley error:', e);
+    showToast('Error: ' + (e.message || 'Unknown error'), 'error');
   }
   btn.disabled = false; btn.textContent = 'Submit Trolley';
 }
