@@ -656,6 +656,7 @@ function renderLineItems() {
   const el = document.getElementById('lineItemsList');
   if (lineItems.length === 0) {
     el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:4px 0 10px;">No frames added yet.</div>';
+    updateSubmitButton();
     return;
   }
   const total = lineItems.reduce((s,l) => s+l.pieces, 0);
@@ -667,6 +668,7 @@ function renderLineItems() {
     + '<button class="line-item-remove" onclick="removeLineItem(' + i + ')">×</button></div>'
   ).join('')
   + '<div style="font-size:12px;color:var(--text3);text-align:right;margin-bottom:8px;">Total: <strong style="color:var(--accent)">' + total + ' pcs</strong></div>';
+  updateSubmitButton();
 }
 
 // ── PHOTOS ────────────────────────────────────────
