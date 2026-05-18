@@ -631,20 +631,24 @@ function selectMattress(el, val) {
 }
 
 function addLineItem() {
-  if (!draftSize || !draftShape || !draftMattress) { showToast('Complete frame selection', 'error'); return; }
+  var catDef = typeof getCategoryDef === 'function' ? getCategoryDef(draftCategory||'bed') : { hasSizes: true };
+  var sizeOk = catDef.hasSizes ? !!draftSize : true;
+  if (!sizeOk || !draftShape || !draftMattress) { showToast('Complete frame selection', 'error'); return; }
   const pieces = parseInt(document.getElementById('piecesInput').value);
   if (!pieces || pieces < 1) { showToast('Enter valid piece count', 'error'); return; }
   lineItems.push({ size: draftSize, shape: draftShape, mattress: draftMattress, pieces });
-  renderLineItems();
   // Reset draft
-  draftSize = null; draftShape = null; draftMattress = null; draftShapeId = null;
-  document.querySelectorAll('#sizeRow .pill').forEach(p => p.classList.remove('selected'));
-  document.querySelectorAll('.shape-card').forEach(c => c.classList.remove('selected'));
+  draftCategory = null; draftSize = null; draftShape = null; draftMattress = null; draftShapeId = null;
+  document.querySelectorAll('#categoryRow .pill, #sizeRow .pill').forEach(function(p){ p.classList.remove('selected'); });
+  document.querySelectorAll('.shape-card').forEach(function(c){ c.classList.remove('selected'); });
+  if (document.getElementById('sizeStep')) document.getElementById('sizeStep').style.display = 'none';
   document.getElementById('shapeStep').style.display = 'none';
   document.getElementById('mattressStep').style.display = 'none';
   document.getElementById('piecesStep').style.display = 'none';
   document.getElementById('piecesInput').value = '';
   document.getElementById('addFramePanel').classList.add('collapsed');
+  renderLineItems();
+  hideDraftWarning();
   showToast('Frame added \u2713', 'success');
 }
 
