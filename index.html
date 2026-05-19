@@ -1470,6 +1470,16 @@ function showSaveFailedBanner() {
   document.body.appendChild(banner);
 }
 
+// ── UTILS ─────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openLightbox(src) { if (!src) return; document.getElementById('lightboxImg').src = src; document.getElementById('lightbox').classList.add('open'); }
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + (type||'');
+  setTimeout(function(){ t.classList.remove('show'); }, 2800);
+}
+
 // init
 renderLineItems();
 updateSubmitButton();
